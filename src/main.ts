@@ -1,5 +1,5 @@
-import { errorMapper } from "./modules/errorMapper";
+import { errorMapper } from './modules/errorMapper';
 
 export const loop = errorMapper(() => {
-    console.log("jehello");
-})
+  console.log('jehello');
+});

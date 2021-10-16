@@ -8,7 +8,8 @@
   "scripts": {
     "build": "rollup -cw",
     "push": "rollup -cw --environment DEST:main",
-    "local": "rollup -cw --environment DEST:local"
+    "local": "rollup -cw --environment DEST:local",
+    "lint": "eslint --fix --ext .js,.ts src"
   },
   "dependencies": {
     "@rollup/plugin-commonjs": "^21.0.0",
@@ -22,6 +23,9 @@
     "source-map": "^0.7.3"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.1",
     "rollup-plugin-typescript2": "^0.30.0",
     "typescript": "^4.4.4"
   }
