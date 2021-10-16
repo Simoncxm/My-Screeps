@@ -1,0 +1,24 @@
+{
+  "name": "my_screeps",
+  "version": "1.0.0",
+  "description": "my screeps codes",
+  "main": "main.js",
+  "author": "chuximing",
+  "license": "MIT",
+  "scripts": {
+    "build": "rollup -cw",
+    "push": "rollup -cw --environment DEST:main",
+    "local": "rollup -cw --environment DEST:local"
+  },
+  "dependencies": {
+    "@rollup/plugin-commonjs": "^21.0.0",
+    "@rollup/plugin-node-resolve": "^13.0.5",
+    "@types/lodash": "^4.14.175",
+    "@types/screeps": "^3.2.4",
+    "rollup": "^2.58.0",
+    "rollup-plugin-clear": "^2.0.7",
+    "rollup-plugin-copy": "^3.4.0",
+    "rollup-plugin-screeps": "^1.0.1",
+    "source-map": "^0.7.3"
+  }
+}
