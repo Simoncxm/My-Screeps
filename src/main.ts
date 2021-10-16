@@ -1,14 +1,13 @@
 import _ from 'lodash';
-import roleBuilder from './modules/role.builder';
-import roleHarvester from './modules/role.harvester';
 import roleUpgrader from './modules/role.upgrader';
+import roleTransWorker from './modules/role.transWorker';
 
 type roles = 'harvester' | 'upgrader' | 'builder';
 
 const roleToDesign = {
-  'harvester': [WORK, CARRY, MOVE, MOVE],
-  'upgrader': [WORK, CARRY, MOVE, MOVE],
-  'builder': [WORK, CARRY, MOVE, MOVE],
+  'harvester': [WORK, WORK, CARRY, MOVE],
+  'upgrader': [WORK, CARRY, MOVE],
+  'builder': [WORK, WORK, CARRY, MOVE],
 };
 
 const findAndBuild = (role: roles, maxLength: number) => {
@@ -24,8 +23,8 @@ const findAndBuild = (role: roles, maxLength: number) => {
 };
 
 export const loop = () => {
-  for(const name in Memory.creeps) {
-    if(!Game.creeps[name]) {
+  for (const name in Memory.creeps) {
+    if (!Game.creeps[name]) {
       delete Memory.creeps[name];
       console.log('Clearing non-existing creep memory:', name);
     }
@@ -35,7 +34,7 @@ export const loop = () => {
   findAndBuild('upgrader', 2);
   findAndBuild('builder', 2);
 
-  if(Game.spawns['Spawn1'].spawning) { 
+  if (Game.spawns['Spawn1'].spawning) { 
     const spawningCreep = Game.creeps[Game.spawns['Spawn1'].spawning.name];
     Game.spawns['Spawn1'].room.visual.text(
       '🛠️' + spawningCreep.memory.role,
@@ -46,14 +45,14 @@ export const loop = () => {
 
   for (const name in Game.creeps) {
     const creep = Game.creeps[name];
-    if (creep.memory.role == 'harvester') {
-      roleHarvester.run(creep);
+    if (creep.memory.role === 'harvester') {
+      roleTransWorker.run(creep);
     }
-    if (creep.memory.role == 'upgrader') {
+    if (creep.memory.role === 'upgrader') {
       roleUpgrader.run(creep);
     }
-    if (creep.memory.role == 'builder') {
-      roleBuilder.run(creep);
+    if (creep.memory.role === 'builder') {
+      roleTransWorker.run(creep);
     }
   }
 };

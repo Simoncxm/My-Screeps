@@ -1,4 +1,5 @@
 interface CreepMemory {
-    role: string;
-    upgrading?: boolean;
+  role: string;
+  working?: boolean;
+  upgrading?: boolean;
 }

@@ -2,3 +2,5 @@
 /dist
 
 .secret.json
+
+/.vscode
