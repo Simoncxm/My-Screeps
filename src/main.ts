@@ -1,26 +1,5 @@
-import _ from 'lodash';
-import roleUpgrader from './modules/role.upgrader';
-import roleTransWorker from './modules/role.transWorker';
-
-type roles = 'harvester' | 'upgrader' | 'builder';
-
-const roleToDesign = {
-  'harvester': [WORK, WORK, CARRY, MOVE, MOVE],
-  'upgrader': [WORK, WORK, CARRY, MOVE, MOVE],
-  'builder': [WORK, WORK, CARRY, MOVE, MOVE],
-};
-
-const findAndBuild = (role: roles, maxLength: number) => {
-  const creeps = _.filter(Game.creeps, (creep) => creep.memory.role === role);
-  console.log(role + ': ' + creeps.length);
-
-  if (creeps.length < maxLength) {
-    const newName = role + Game.time;
-    console.log('Spawning new ' + role + ': ' + newName);
-    Game.spawns['Spawn1'].spawnCreep(roleToDesign[role], newName, 
-      {memory: {role}});
-  }
-};
+import spawnCreeps from '@/modules/creepSpawnController';
+import { runCreep } from '@/modules/creepsRoleController';
 
 export const loop = () => {
   for (const name in Memory.creeps) {
@@ -30,9 +9,7 @@ export const loop = () => {
     }
   }
 
-  findAndBuild('harvester', 2);
-  findAndBuild('upgrader', 4);
-  findAndBuild('builder', 3);
+  spawnCreeps();
 
   if (Game.spawns['Spawn1'].spawning) { 
     const spawningCreep = Game.creeps[Game.spawns['Spawn1'].spawning.name];
@@ -45,14 +22,6 @@ export const loop = () => {
 
   for (const name in Game.creeps) {
     const creep = Game.creeps[name];
-    if (creep.memory.role === 'harvester') {
-      roleTransWorker.run(creep);
-    }
-    if (creep.memory.role === 'upgrader') {
-      roleUpgrader.run(creep);
-    }
-    if (creep.memory.role === 'builder') {
-      roleTransWorker.run(creep);
-    }
+    runCreep(creep);
   }
 };

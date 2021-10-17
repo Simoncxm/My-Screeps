@@ -1,5 +1,7 @@
+type Roles = 'harvester' | 'upgrader' | 'builder' | 'miner' | 'carrier';
+
 interface CreepMemory {
-  role: string;
+  role: Roles;
   working?: boolean;
   upgrading?: boolean;
 }
