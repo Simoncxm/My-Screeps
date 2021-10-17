@@ -5,9 +5,9 @@ import roleTransWorker from './modules/role.transWorker';
 type roles = 'harvester' | 'upgrader' | 'builder';
 
 const roleToDesign = {
-  'harvester': [WORK, WORK, CARRY, MOVE],
-  'upgrader': [WORK, CARRY, MOVE],
-  'builder': [WORK, WORK, CARRY, MOVE],
+  'harvester': [WORK, WORK, CARRY, MOVE, MOVE],
+  'upgrader': [WORK, WORK, CARRY, MOVE, MOVE],
+  'builder': [WORK, WORK, CARRY, MOVE, MOVE],
 };
 
 const findAndBuild = (role: roles, maxLength: number) => {
@@ -31,8 +31,8 @@ export const loop = () => {
   }
 
   findAndBuild('harvester', 2);
-  findAndBuild('upgrader', 2);
-  findAndBuild('builder', 2);
+  findAndBuild('upgrader', 4);
+  findAndBuild('builder', 3);
 
   if (Game.spawns['Spawn1'].spawning) { 
     const spawningCreep = Game.creeps[Game.spawns['Spawn1'].spawning.name];

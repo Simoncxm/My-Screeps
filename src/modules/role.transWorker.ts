@@ -1,4 +1,4 @@
-import { harvest, build, transfer } from './actions';
+import { findClosest, harvest, build, transfer, repair } from './actions';
 
 const roleTransWorker = {
   run: (creep: Creep): void => {
@@ -21,23 +21,42 @@ const roleTransWorker = {
         }
       });
       const constructionSites = creep.room.find(FIND_CONSTRUCTION_SITES);
+      const repairSites = creep.room.find(FIND_STRUCTURES, {
+        filter: (structure: AnyStructure) => {
+          return (structure.structureType === STRUCTURE_CONTAINER ||
+            structure.structureType === STRUCTURE_ROAD) &&
+            structure.hitsMax > structure.hits;
+        }
+      });
+
       if (creep.memory.role === 'harvester') {
         if (storages.length > 0) {
-          transfer(creep, storages[0]);
+          const index = findClosest(creep, storages);
+          transfer(creep, storages[index]);
+        } else if (repairSites.length > 0) {
+          const index = findClosest(creep, repairSites);
+          repair(creep, repairSites[index]);
         } else {
-          build(creep, constructionSites[0]);
+          const index = findClosest(creep, constructionSites);
+          build(creep, constructionSites[index]);
         }
       }
       else if (creep.memory.role === 'builder') {
-        if (constructionSites.length > 0) {
-          build(creep, constructionSites[0]);
+        if (repairSites.length > 0) {
+          const index = findClosest(creep, repairSites);
+          repair(creep, repairSites[index]);
+        } else if (constructionSites.length > 0) {
+          const index = findClosest(creep, constructionSites);
+          build(creep, constructionSites[index]);
         } else {
-          transfer(creep, storages[0]);
+          const index = findClosest(creep, storages);
+          transfer(creep, storages[index]);
         }
       }
     } else {
-      const sources = creep.room.find(FIND_SOURCES);
-      harvest(creep, sources[1]);
+      const sources = creep.room.find(FIND_SOURCES_ACTIVE);
+      const index = findClosest(creep, sources);
+      harvest(creep, sources[index]);
     }
   }
 };
