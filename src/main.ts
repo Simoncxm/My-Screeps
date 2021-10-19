@@ -1,5 +1,5 @@
 import spawnCreeps from '@/modules/creepSpawnController';
-import { runCreep } from '@/modules/creepsRoleController';
+import { runCreep, minerController } from '@/modules/creepsRoleController';
 
 export const loop = () => {
   for (const name in Memory.creeps) {
@@ -20,6 +20,7 @@ export const loop = () => {
       {align: 'left', opacity: 0.8});
   }
 
+  minerController.index = 0;
   for (const name in Game.creeps) {
     const creep = Game.creeps[name];
     runCreep(creep);

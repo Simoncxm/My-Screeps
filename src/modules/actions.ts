@@ -1,4 +1,4 @@
-import { getSources, getStorages, getConstructionSites, getRepairableSites } from './creepsRoleController';
+import { getSources, getStorages, getNeedStorages, getConstructionSites, getRepairableSites, getResources, getStores } from './creepsRoleController';
 
 interface HasPos {
   pos: RoomPosition
@@ -17,9 +17,8 @@ export const findClosest = (creep: Creep, targets: HasPos[]): number => {
   return final;
 };
 
-export const harvest = (creep: Creep): void => {
+export const harvest = (creep: Creep, index: number): void => {
   const sources = getSources(creep.room);
-  const index = findClosest(creep, sources);
 
   if (creep.harvest(sources[index]) === ERR_NOT_IN_RANGE) {
     creep.moveTo(sources[index], {visualizePathStyle: {stroke: '#ffaa00'}});
@@ -36,11 +35,14 @@ export const build = (creep: Creep): void => {
 };
 
 export const transfer = (creep: Creep): void => {
-  const storages = getStorages(creep.room);
-  const index = findClosest(creep, storages);
+  let needs = getNeedStorages(creep.room);
+  if (needs.length === 0) {
+    needs = getStorages(creep.room);
+  }
+  const index = findClosest(creep, needs);
 
-  if (creep.transfer(storages[index], RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-    creep.moveTo(storages[index], {visualizePathStyle: {stroke: '#ffffff'}});
+  if (creep.transfer(needs[index], RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+    creep.moveTo(needs[index], {visualizePathStyle: {stroke: '#ffffff'}});
   }
 };
 
@@ -56,5 +58,23 @@ export const repair = (creep: Creep): void => {
 export const upgrade = (creep: Creep): void => {
   if (creep.upgradeController(creep.room.controller) === ERR_NOT_IN_RANGE) {
     creep.moveTo(creep.room.controller, { visualizePathStyle: { stroke: '#ffffff' } });
+  }
+};
+
+export const pickup = (creep: Creep): void => {
+  const resources = getResources(creep.room);
+  const index = findClosest(creep, resources);
+
+  if (creep.pickup(resources[index]) === ERR_NOT_IN_RANGE) {
+    creep.moveTo(resources[index], {visualizePathStyle: {stroke: '#ffaa00'}});
+  }
+};
+
+export const withdraw = (creep: Creep): void => {
+  const stores = getStores(creep.room);
+  const index = findClosest(creep, stores);
+
+  if (creep.withdraw(stores[index], RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+    creep.moveTo(stores[index], {visualizePathStyle: {stroke: '#ffaa00'}});
   }
 };

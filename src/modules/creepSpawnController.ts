@@ -14,7 +14,7 @@ const getCreepsDesign = (): CreepsDesignDict => {
       'upgrader': [WORK, WORK, CARRY, MOVE],
       'builder': [WORK, WORK, CARRY, MOVE],
     };
-  } else if (getMaxCost >= 550 && getMaxCost < 800) {
+  } else if (getMaxCost >= 550) {
     res = {
       'harvester': [WORK, WORK, CARRY, MOVE, MOVE],
       'miner': [WORK, WORK, WORK, WORK, WORK, MOVE],
@@ -41,7 +41,9 @@ const findAndBuild = (role: Roles, maxLength: number) => {
 };
 
 export default function spawnCreeps(): void {
-  findAndBuild('harvester', 2);
+  // findAndBuild('harvester', 2);
+  findAndBuild('miner', 2);
+  findAndBuild('carrier', 4);
   findAndBuild('upgrader', 4);
-  findAndBuild('builder', 3);
+  findAndBuild('builder', 4);
 }
