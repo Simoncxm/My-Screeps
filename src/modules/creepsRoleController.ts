@@ -1,73 +1,11 @@
-import { harvest, build, transfer, repair, upgrade, pickup, withdraw } from './actions';
+import { harvest, build, transfer, repair, upgrade, pickup, withdraw, claim } from './actions';
+import { roomStructureFinder } from './structureFilter';
 
 interface CreepsController {
   run: (creep: Creep) => void,
   fill?: (creep: Creep) => void,
   work?: (creep: Creep) => void,
 }
-
-// 找矿
-export const getSources = (room: Room): Source[] => {
-  return room.find(FIND_SOURCES_ACTIVE);
-};
-
-// 找可存放的建筑
-export const getStorages = (room: Room): AnyStructure[] => {
-  return room.find(FIND_STRUCTURES, {
-    filter: (structure: AnyStructure) => {
-      return (structure.structureType === STRUCTURE_SPAWN ||
-        structure.structureType === STRUCTURE_EXTENSION ||
-        structure.structureType === STRUCTURE_TOWER ||
-        structure.structureType === STRUCTURE_CONTAINER ||
-        structure.structureType === STRUCTURE_STORAGE) &&
-        structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
-    }
-  });
-};
-
-// 找需能量的建筑
-export const getNeedStorages = (room: Room): AnyStructure[] => {
-  return room.find(FIND_STRUCTURES, {
-    filter: (structure: AnyStructure) => {
-      return (structure.structureType === STRUCTURE_SPAWN ||
-        structure.structureType === STRUCTURE_EXTENSION ||
-        structure.structureType === STRUCTURE_TOWER) &&
-        structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
-    }
-  });
-};
-
-// 找有能量的建筑
-export const getStores = (room: Room) => {
-  return room.find(FIND_STRUCTURES, {
-    filter: (structure: AnyStructure) => {
-      return (structure.structureType === STRUCTURE_CONTAINER ||
-        structure.structureType === STRUCTURE_STORAGE) &&
-        structure.store[RESOURCE_ENERGY] > 0;
-    }
-  });
-};
-
-// 找工地
-export const getConstructionSites = (room: Room): ConstructionSite<BuildableStructureConstant>[] => {
-  return room.find(FIND_CONSTRUCTION_SITES);
-};
-
-// 找需维修建筑
-export const getRepairableSites = (room: Room): AnyStructure[] => {
-  return room.find(FIND_STRUCTURES, {
-    filter: (structure: AnyStructure) => {
-      return (structure.structureType === STRUCTURE_CONTAINER ||
-        structure.structureType === STRUCTURE_ROAD) &&
-        structure.hitsMax > structure.hits;
-    }
-  });
-};
-
-// 找地下能量
-export const getResources = (room: Room): Resource<ResourceConstant>[] => {
-  return room.find(FIND_DROPPED_RESOURCES);
-};
 
 abstract class BaseController implements CreepsController {
   run(creep: Creep): void {
@@ -92,28 +30,29 @@ abstract class BaseController implements CreepsController {
 
 class HarvesterController extends BaseController {
   work(creep: Creep): void {
-    if (getStorages(creep.room).length > 0) {
+    if (roomStructureFinder.needStorages.length > 0) {
       transfer(creep);
-    } else if (getRepairableSites(creep.room).length > 0) {
+    } else if (roomStructureFinder.needRepairSites.length > 0) {
       repair(creep);
     } else {
       build(creep);
     }
   }
   fill(creep: Creep): void {
-    harvest(creep, 1);
+    // harvest(creep, 1);
+    withdraw(creep);
   }
 }
 const harvesterController = new HarvesterController;
 
 class BuilderController extends BaseController {
   work(creep: Creep): void {
-    if (getRepairableSites(creep.room).length > 0) {
+    if (roomStructureFinder.needRepairSites.length > 0) {
       repair(creep);
-    } else if (getConstructionSites(creep.room).length > 0) {
+    } else if (roomStructureFinder.constructionSites.length > 0) {
       build(creep);
     } else {
-      transfer(creep);
+      upgrade(creep);
     }
   }
   fill(creep: Creep): void {
@@ -127,9 +66,7 @@ class UpgraderController extends BaseController {
     upgrade(creep);
   }
   fill(creep: Creep): void {
-    if (getResources(creep.room).length > 0) {
-      pickup(creep);
-    } else if (getStores(creep.room).length > 0) {
+    if (roomStructureFinder.hasStorages.length > 0) {
       withdraw(creep);
     } else {
       harvest(creep, 0);
@@ -148,7 +85,17 @@ class CarrierController extends BaseController {
 }
 const carrierController = new CarrierController;
 
-class MinerController {
+class TransfererController extends BaseController {
+  work(creep: Creep): void {
+    transfer(creep);
+  }
+  fill(creep: Creep): void {
+    withdraw(creep);
+  }
+}
+const transfererController = new TransfererController;
+
+class MinerController implements CreepsController {
   index: number;
   run(creep: Creep): void {
     harvest(creep, this.index);
@@ -157,24 +104,33 @@ class MinerController {
 }
 export const minerController = new MinerController;
 
+class ClaimerController implements CreepsController {
+  run(creep: Creep): void {
+    claim(creep);
+  }
+}
+const claimController = new ClaimerController;
+
+const roleToController = {
+  harvester: harvesterController,
+  builder: builderController,
+  upgrader: upgraderController,
+  miner: minerController,
+  carrier: carrierController,
+  transferer: transfererController,
+  claimer: claimController,
+};
+
 const getRoleController = (role: Roles): CreepsController => {
-  if (role === 'harvester') {
-    return harvesterController;
-  } else if (role === 'builder') {
-    return builderController;
-  } else if (role === 'upgrader') {
-    return upgraderController;
-  } else if (role === 'miner') {
-    return minerController;
-  } else if (role === 'carrier') {
-    return carrierController;
-  } else {
-    return {
+  let controller = roleToController[role];
+  if (controller === undefined) {
+    controller = {
       run: (creep: Creep) => {
         console.log('control by myself');
-      },
+      }
     };
   }
+  return controller;
 };
 
 export const runCreep = (creep: Creep): void => {

@@ -1,24 +1,7 @@
-import { getSources, getStorages, getNeedStorages, getConstructionSites, getRepairableSites, getResources, getStores } from './creepsRoleController';
-
-interface HasPos {
-  pos: RoomPosition
-}
-
-export const findClosest = (creep: Creep, targets: HasPos[]): number => {
-  let minDist = 2147483647;
-  let final = -1;
-  for (let index = 0; index < targets.length; index++) {
-    const dist = creep.room.findPath(creep.pos, targets[index].pos);
-    if (dist.length < minDist) {
-      minDist = dist.length;
-      final = index;
-    }
-  }
-  return final;
-};
+import { needStoragesFilter, otherStoragesFilter, hasEnergyStoragesFilter, needRepairFilter, roomStructureFinder } from './structureFilter';
 
 export const harvest = (creep: Creep, index: number): void => {
-  const sources = getSources(creep.room);
+  const sources = roomStructureFinder.sources;
 
   if (creep.harvest(sources[index]) === ERR_NOT_IN_RANGE) {
     creep.moveTo(sources[index], {visualizePathStyle: {stroke: '#ffaa00'}});
@@ -26,32 +9,29 @@ export const harvest = (creep: Creep, index: number): void => {
 };
 
 export const build = (creep: Creep): void => {
-  const constructionSites = getConstructionSites(creep.room);
-  const index = findClosest(creep, constructionSites);
+  const constructionSite = creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
   
-  if (creep.build(constructionSites[index]) === ERR_NOT_IN_RANGE) {
-    creep.moveTo(constructionSites[index], { visualizePathStyle: { stroke: '#ffffff' } });
+  if (creep.build(constructionSite) === ERR_NOT_IN_RANGE) {
+    creep.moveTo(constructionSite, { visualizePathStyle: { stroke: '#ffffff' } });
   }
 };
 
 export const transfer = (creep: Creep): void => {
-  let needs = getNeedStorages(creep.room);
-  if (needs.length === 0) {
-    needs = getStorages(creep.room);
+  let need = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: needStoragesFilter});
+  if (need === null) {
+    need = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: otherStoragesFilter});
   }
-  const index = findClosest(creep, needs);
 
-  if (creep.transfer(needs[index], RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-    creep.moveTo(needs[index], {visualizePathStyle: {stroke: '#ffffff'}});
+  if (creep.transfer(need, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+    creep.moveTo(need, {visualizePathStyle: {stroke: '#ffffff'}});
   }
 };
 
 export const repair = (creep: Creep): void => {
-  const repairSites = getRepairableSites(creep.room);
-  const index = findClosest(creep, repairSites);
+  const repairSite = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: needRepairFilter});
 
-  if (creep.repair(repairSites[index]) === ERR_NOT_IN_RANGE) {
-    creep.moveTo(repairSites[index], {visualizePathStyle: {stroke: '#ffffff'}});
+  if (creep.repair(repairSite) === ERR_NOT_IN_RANGE) {
+    creep.moveTo(repairSite, {visualizePathStyle: {stroke: '#ffffff'}});
   }
 };
 
@@ -62,19 +42,58 @@ export const upgrade = (creep: Creep): void => {
 };
 
 export const pickup = (creep: Creep): void => {
-  const resources = getResources(creep.room);
-  const index = findClosest(creep, resources);
+  const resources = roomStructureFinder.resources;
+  let amount = 0;
+  let resource: Resource<ResourceConstant>;
+  for (const res of resources) {
+    if (res.amount > amount) {
+      amount = res.amount;
+      resource = res;
+    }
+  }
 
-  if (creep.pickup(resources[index]) === ERR_NOT_IN_RANGE) {
-    creep.moveTo(resources[index], {visualizePathStyle: {stroke: '#ffaa00'}});
+  if (creep.pickup(resource) === ERR_NOT_IN_RANGE) {
+    creep.moveTo(resource, {visualizePathStyle: {stroke: '#ffaa00'}});
   }
 };
 
 export const withdraw = (creep: Creep): void => {
-  const stores = getStores(creep.room);
-  const index = findClosest(creep, stores);
+  const tombstone = creep.pos.findClosestByPath(FIND_TOMBSTONES, {
+    filter: (t: Tombstone) => {
+      return t.store.getUsedCapacity() > 0;
+    }
+  });
+  if (tombstone !== null) {
+    if (creep.withdraw(tombstone, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+      creep.moveTo(tombstone, {visualizePathStyle: {stroke: '#ffaa00'}});
+    }
+  } else {
+    const ruin = creep.pos.findClosestByPath(FIND_RUINS, {
+      filter: (ruin: Ruin) => {
+        return ruin.store.getUsedCapacity() > 0;
+      }
+    });
+    if (ruin !== null) {
+      if (creep.withdraw(ruin, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+        creep.moveTo(ruin, {visualizePathStyle: {stroke: '#ffaa00'}});
+      }
+    } else {
+      const store = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: hasEnergyStoragesFilter});
+      if (creep.withdraw(store, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+        creep.moveTo(store, {visualizePathStyle: {stroke: '#ffaa00'}});
+      }
+    }
+  }
+};
 
-  if (creep.withdraw(stores[index], RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-    creep.moveTo(stores[index], {visualizePathStyle: {stroke: '#ffaa00'}});
+export const claim = (creep: Creep): void => {
+  const controller = creep.room.controller;
+  if (!controller.my) {
+    creep.moveTo(controller, { visualizePathStyle: { stroke: '#ffffff' } });
+    // if (creep.claimController(controller) === ERR_NOT_IN_RANGE) {}
+  } else {
+    const exit = creep.pos.findClosestByPath(FIND_EXIT_RIGHT);
+    console.log('exit', exit);
+    creep.moveTo(exit);
   }
 };

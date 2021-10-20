@@ -21,12 +21,14 @@ const getCreepsDesign = (): CreepsDesignDict => {
       'carrier': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
       'builder': [WORK, WORK, CARRY, CARRY, MOVE, MOVE],
       'upgrader': [WORK, WORK, CARRY, MOVE, MOVE],
+      'transferer': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
+      'claimer': [CLAIM, MOVE, MOVE],
     };
   }
   return res;
 };
 
-const findAndBuild = (role: Roles, maxLength: number) => {
+const countAndBuild = (role: Roles, maxLength: number): boolean => {
   const creeps = _.filter(Game.creeps, (creep) => creep.memory.role === role);
   console.log(role + ': ' + creeps.length);
 
@@ -37,13 +39,22 @@ const findAndBuild = (role: Roles, maxLength: number) => {
     console.log('Spawning new ' + role + ': ' + newName);
     Game.spawns['Spawn1'].spawnCreep(roleToDesign[role], newName, 
       {memory: {role}});
+    return false;
   }
+  return true;
 };
 
 export default function spawnCreeps(): void {
-  // findAndBuild('harvester', 2);
-  findAndBuild('miner', 2);
-  findAndBuild('carrier', 4);
-  findAndBuild('upgrader', 4);
-  findAndBuild('builder', 4);
+  // countAndBuild('harvester', 2);
+  if (countAndBuild('miner', 2)) {
+  if (countAndBuild('carrier', 4)) {
+  if (countAndBuild('builder', 4)) {
+  if (countAndBuild('upgrader', 4)) {
+  if (countAndBuild('transferer', 2)) {
+    // countAndBuild('claimer', 1);
+  }
+  }
+  }
+  }
+  }
 }
